@@ -1,0 +1,23 @@
+{
+	"name": "rabbitassets",
+	"version": "1.0.0",
+	"description": "Asset price monitoring system with OpenMetrics export",
+	"module": "src/index.ts",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"start": "bun run src/index.ts",
+		"build": "bun build --compile --minify --sourcemap --target=bun-linux-x64-modern src/index.ts --outfile dist/rabbitassets"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@rabbit-company/logger": "^5.6.0",
+		"@rabbit-company/web": "^0.14.0",
+		"@rabbit-company/web-middleware": "^0.14.0"
+	}
+}

@@ -1,0 +1,41 @@
+{
+	"server": {
+		"port": 9090,
+		"host": "0.0.0.0"
+	},
+	"logger": {
+		"level": 3
+	},
+	"assets": [
+		{
+			"symbol": "BTC",
+			"quantity": 0.043212,
+			"exchange": "binance",
+			"currency": "USDT"
+		},
+		{
+			"symbol": "ETH",
+			"quantity": 0.64232,
+			"exchange": "binance",
+			"currency": "USDT"
+		},
+		{
+			"symbol": "SOL",
+			"quantity": 0.16,
+			"exchange": "binance",
+			"currency": "USDT"
+		},
+		{
+			"symbol": "UI",
+			"quantity": 2.54,
+			"exchange": "trading212",
+			"currency": "EUR"
+		},
+		{
+			"symbol": "VOW3",
+			"quantity": 4.2,
+			"exchange": "trading212",
+			"currency": "EUR"
+		}
+	]
+}
