@@ -4,6 +4,7 @@ import type { AssetConfig, ConfigType, PriceData } from "./types";
 import { Monitor } from "./monitor";
 import { Logger } from "./logger";
 import { KrakenExchange } from "./exchanges/kraken";
+import { CoinbaseExchange } from "./exchanges/coinbase";
 
 interface ExchangeConstructor {
 	new (): BaseExchange;
@@ -12,6 +13,7 @@ interface ExchangeConstructor {
 const EXCHANGE_REGISTRY: Record<string, ExchangeConstructor> = {
 	binance: BinanceExchange,
 	kraken: KrakenExchange,
+	coinbase: CoinbaseExchange,
 	// coingecko: CoinGeckoExchange, // Add later
 	// trading212: Trading212Exchange, // Add later
 };
@@ -75,7 +77,7 @@ export class MonitorManager {
 		}, {} as Record<string, number>);
 
 		// Determine if we should use WebSocket
-		const useWebSocket = ["binance", "kraken"].includes(exchangeName); // Configure per exchange
+		const useWebSocket = ["binance", "kraken", "coinbase"].includes(exchangeName); // Configure per exchange
 
 		const monitor = new Monitor(exchange, 30000, assetsMap, useWebSocket);
 

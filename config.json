@@ -16,13 +16,13 @@
 		{
 			"symbol": "ETH",
 			"quantity": 0.64232,
-			"exchange": "binance",
+			"exchange": "coinbase",
 			"currency": "USD"
 		},
 		{
 			"symbol": "SOL",
 			"quantity": 0.16,
-			"exchange": "binance",
+			"exchange": "coinbase",
 			"currency": "USD"
 		},
 		{
