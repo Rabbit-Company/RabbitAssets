@@ -69,7 +69,7 @@ export class Monitor {
 		try {
 			const symbols = Object.keys(this.assets);
 			await this.exchange.fetchPricesRest(symbols, this.fiatService);
-			Logger.info(`[${this.exchange.constructor.name}] Prices updated`);
+			Logger.debug(`[${this.exchange.constructor.name}] Prices updated`);
 		} catch (error: any) {
 			Logger.error(`[${this.exchange.constructor.name}] REST polling error:`, error);
 		}
