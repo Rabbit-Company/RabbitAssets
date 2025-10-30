@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 import { Logger } from "../logger";
 import type { PriceData } from "../types";
+import type { FiatService } from "../services/fiat-service";
 
 export abstract class BaseExchange extends EventEmitter {
 	protected ws?: WebSocket;
@@ -170,7 +171,7 @@ export abstract class BaseExchange extends EventEmitter {
 	// ------------------------------------------------------
 	// REST fallback (optional per exchange)
 	// ------------------------------------------------------
-	public async fetchPricesRest(symbols: string[]): Promise<void> {
+	public async fetchPricesRest(symbols: string[], fiatService: FiatService): Promise<void> {
 		Logger.warn(`[${this.name}] REST fetch not implemented`);
 	}
 

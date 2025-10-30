@@ -8,6 +8,12 @@
 	},
 	"assets": [
 		{
+			"symbol": "EUR",
+			"quantity": 1500,
+			"exchange": "fiat",
+			"currency": "USD"
+		},
+		{
 			"symbol": "BTC",
 			"quantity": 0.043212,
 			"exchange": "binance",

@@ -5,12 +5,15 @@ import { Monitor } from "./monitor";
 import { Logger } from "./logger";
 import { KrakenExchange } from "./exchanges/kraken";
 import { CoinbaseExchange } from "./exchanges/coinbase";
+import { FiatService } from "./services/fiat-service";
+import { FiatExchange } from "./exchanges/fiat";
 
 interface ExchangeConstructor {
 	new (): BaseExchange;
 }
 
 const EXCHANGE_REGISTRY: Record<string, ExchangeConstructor> = {
+	fiat: FiatExchange,
 	binance: BinanceExchange,
 	kraken: KrakenExchange,
 	coinbase: CoinbaseExchange,
@@ -22,8 +25,15 @@ export class MonitorManager {
 	private monitors = new Map<string, Monitor>();
 	private assetMonitors = new Map<string, string>();
 	private unsupportedAssets: AssetConfig[] = [];
+	private fiatService: FiatService;
+
+	constructor() {
+		this.fiatService = new FiatService();
+	}
 
 	async initialize(config: ConfigType): Promise<void> {
+		await this.fiatService.initialize();
+
 		const assets = config.assets;
 
 		// Group assets by exchange
@@ -79,7 +89,7 @@ export class MonitorManager {
 		// Determine if we should use WebSocket
 		const useWebSocket = ["binance", "kraken", "coinbase"].includes(exchangeName); // Configure per exchange
 
-		const monitor = new Monitor(exchange, 30000, assetsMap, useWebSocket);
+		const monitor = new Monitor(exchange, 30000, assetsMap, useWebSocket, this.fiatService);
 
 		// Store monitor and asset mappings
 		this.monitors.set(exchangeName, monitor);
