@@ -26,7 +26,7 @@ export class Monitor {
 		if (this.useWebSocket && this.exchange.connectWebSocket) {
 			try {
 				Logger.info(`[${this.exchange.constructor.name}] Starting WebSocket monitoring for: ${symbols.join(", ")}`);
-				await this.exchange.connectWebSocket(symbols, this.handlePriceUpdate.bind(this));
+				await this.exchange.connectWebSocket(symbols);
 			} catch (error: any) {
 				Logger.error(`[${this.exchange.constructor.name}] WebSocket failed, falling back to REST:`, error);
 				this.startRestPolling();
