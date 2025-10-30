@@ -18,6 +18,9 @@ export abstract class BaseExchange extends EventEmitter {
 	protected abstract getWebSocketURL(symbols: string[]): string;
 	protected abstract handleMessage(data: any): void;
 
+	// Optional method for exchanges that need to send subscription messages
+	protected async sendSubscriptionMessage(symbols: string[]): Promise<void> {}
+
 	// ------------------------------------------------------
 	// WebSocket lifecycle
 	// ------------------------------------------------------
@@ -42,11 +45,21 @@ export abstract class BaseExchange extends EventEmitter {
 				Logger.info(`[${this.name}] Connecting to ${url}`);
 				this.ws = new WebSocket(url);
 
-				this.ws.onopen = () => {
+				this.ws.onopen = async () => {
 					Logger.info(`[${this.name}] WebSocket connected`);
 					this.lastMessageTime = Date.now();
 					this.reconnecting = false;
 					this.backoff = 1000; // Reset backoff on successful connection
+
+					try {
+						// Send subscription message if the exchange requires it
+						await this.sendSubscriptionMessage(symbols);
+						Logger.debug(`[${this.name}] Subscription message sent successfully`);
+					} catch (err) {
+						Logger.error(`[${this.name}] Failed to send subscription message: ${(err as Error).message}`);
+						// Don't reject the connection - some exchanges might work without subscription
+					}
+
 					this.startWatchdog();
 					resolve();
 				};

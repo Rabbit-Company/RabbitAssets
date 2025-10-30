@@ -11,25 +11,25 @@
 			"symbol": "BTC",
 			"quantity": 0.043212,
 			"exchange": "binance",
-			"currency": "USDT"
+			"currency": "USD"
 		},
 		{
 			"symbol": "ETH",
 			"quantity": 0.64232,
 			"exchange": "binance",
-			"currency": "USDT"
+			"currency": "USD"
 		},
 		{
 			"symbol": "SOL",
 			"quantity": 0.16,
 			"exchange": "binance",
-			"currency": "USDT"
+			"currency": "USD"
 		},
 		{
-			"symbol": "UI",
+			"symbol": "XMR",
 			"quantity": 2.54,
-			"exchange": "trading212",
-			"currency": "EUR"
+			"exchange": "kraken",
+			"currency": "USD"
 		},
 		{
 			"symbol": "VOW3",

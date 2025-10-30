@@ -15,6 +15,6 @@ export class BinanceExchange extends BaseExchange {
 		const symbol = ticker.s.replace("USDT", "");
 		const price = parseFloat(ticker.c);
 
-		this.updatePrice({ symbol, price, currency: "USDT", timestamp: Date.now() });
+		this.updatePrice({ symbol, price, currency: "USD", timestamp: Date.now() });
 	}
 }
