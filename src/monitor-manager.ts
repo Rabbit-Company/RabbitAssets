@@ -7,6 +7,7 @@ import { KrakenExchange } from "./exchanges/kraken";
 import { CoinbaseExchange } from "./exchanges/coinbase";
 import { FiatService } from "./services/fiat-service";
 import { FiatExchange } from "./exchanges/fiat";
+import { RabbitStocksExchange } from "./exchanges/rabbitstocks";
 
 interface ExchangeConstructor {
 	new (): BaseExchange;
@@ -14,6 +15,7 @@ interface ExchangeConstructor {
 
 const EXCHANGE_REGISTRY: Record<string, ExchangeConstructor> = {
 	fiat: FiatExchange,
+	rabbitstocks: RabbitStocksExchange,
 	binance: BinanceExchange,
 	kraken: KrakenExchange,
 	coinbase: CoinbaseExchange,
@@ -87,7 +89,7 @@ export class MonitorManager {
 		}, {} as Record<string, number>);
 
 		// Determine if we should use WebSocket
-		const useWebSocket = ["binance", "kraken", "coinbase"].includes(exchangeName); // Configure per exchange
+		const useWebSocket = ["rabbitstocks", "binance", "kraken", "coinbase"].includes(exchangeName); // Configure per exchange
 
 		const monitor = new Monitor(exchange, 30000, assetsMap, useWebSocket, this.fiatService);
 

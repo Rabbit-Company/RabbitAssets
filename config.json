@@ -14,6 +14,24 @@
 			"currency": "USD"
 		},
 		{
+			"symbol": "UBNT",
+			"quantity": 3.624,
+			"exchange": "rabbitstocks",
+			"currency": "EUR"
+		},
+		{
+			"symbol": "NET",
+			"quantity": 4.5,
+			"exchange": "rabbitstocks",
+			"currency": "EUR"
+		},
+		{
+			"symbol": "WISEl",
+			"quantity": 4,
+			"exchange": "rabbitstocks",
+			"currency": "EUR"
+		},
+		{
 			"symbol": "BTC",
 			"quantity": 0.043212,
 			"exchange": "binance",
@@ -36,12 +54,6 @@
 			"quantity": 2.54,
 			"exchange": "kraken",
 			"currency": "USD"
-		},
-		{
-			"symbol": "VOW3",
-			"quantity": 4.2,
-			"exchange": "trading212",
-			"currency": "EUR"
 		}
 	]
 }
