@@ -164,6 +164,10 @@ docker run -d \
 
 ## API Endpoints
 
+### GET `/health`
+
+API endpoint for checking project health
+
 ### GET `/metrics`
 
 OpenMetrics format endpoint for Prometheus scraping.
