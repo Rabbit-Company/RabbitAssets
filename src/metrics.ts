@@ -38,8 +38,7 @@ export namespace MetricsExporter {
 				"# HELP portfolio_assets Total number of assets in the portfolio",
 				"# TYPE portfolio_assets gauge",
 				"# HELP portfolio_currency_percentage Percentage of portfolio value by currency",
-				"# TYPE portfolio_currency_percentage gauge",
-				""
+				"# TYPE portfolio_currency_percentage gauge"
 			);
 		}
 
