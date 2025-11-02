@@ -11,7 +11,7 @@ export namespace MetricsExporter {
 		const { enableTimestamps = true, includeHelp = true, portfolioLabels = {} } = options;
 
 		const lines: string[] = [];
-		const timestamp = Date.now();
+		const timestamp = Date.now() / 1000;
 
 		// Group metrics by owner first
 		const metricsByOwner = new Map<string, AssetMetrics[]>();
