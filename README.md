@@ -30,7 +30,7 @@ Docker and Docker Compose
 
 ### Configuration
 
-Create a `config.json` next to `docker-compose.yml` file:
+Create a `config.json` file:
 
 ```json
 {
@@ -125,6 +125,28 @@ Create a `config.json` next to `docker-compose.yml` file:
 ```
 
 ### Running with Docker Compose
+
+Create `docker-compose.yml` file:
+
+```yml
+services:
+  rabbitassets:
+    image: rabbitcompany/rabbitassets:latest
+    container_name: rabbitassets
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config.json:/usr/src/app/config.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+```
+
+Start the project with:
 
 ```bash
 docker-compose up -d

@@ -9,7 +9,7 @@ services:
     volumes:
       - ./config.json:/usr/src/app/config.json
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 10s
       timeout: 3s
       retries: 3

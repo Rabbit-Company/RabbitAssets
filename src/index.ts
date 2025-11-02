@@ -25,7 +25,9 @@ const app = new Web();
 
 app.use(
 	bearerAuth({
-		skip() {
+		skip(ctx) {
+			const url = new URL(ctx.req.url);
+			if (url.pathname === "/health") return true;
 			return !cfg.server?.token;
 		},
 		validate(token) {
@@ -33,6 +35,10 @@ app.use(
 		},
 	})
 );
+
+app.get("/health", async (ctx) => {
+	return ctx.json({ success: true });
+});
 
 app.get("/metrics", async (ctx) => {
 	const metrics = monitorManager.getAssetMetrics();
