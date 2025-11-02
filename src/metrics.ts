@@ -8,7 +8,7 @@ export interface MetricsOptions {
 
 export namespace MetricsExporter {
 	export function generateOpenMetrics(metrics: AssetMetrics[], options: MetricsOptions = {}): string {
-		const { enableTimestamps = true, includeHelp = true, portfolioLabels = {} } = options;
+		const { enableTimestamps = false, includeHelp = true, portfolioLabels = {} } = options;
 
 		const lines: string[] = [];
 		const timestamp = Date.now() / 1000;
