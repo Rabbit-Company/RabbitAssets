@@ -17,7 +17,6 @@
 	},
 	"dependencies": {
 		"@rabbit-company/web": "^0.16.0",
-		"@rabbit-company/web-middleware": "^0.16.0",
-		"fast-xml-parser": "^5.3.0"
+		"@rabbit-company/web-middleware": "^0.16.0"
 	}
 }

@@ -1,4 +1,3 @@
-import { XMLParser } from "fast-xml-parser";
 import { Logger } from "../logger";
 
 interface FiatRates {
@@ -23,18 +22,11 @@ export class FiatService {
 
 	async updateRates(): Promise<void> {
 		try {
-			const response = await fetch("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml");
-			const text = await response.text();
+			const response = await fetch("https://forex.rabbitmonitor.com/v1/rates/EUR");
+			const data = await response.json();
 
-			const parser = new XMLParser({ ignoreAttributes: false });
-			const obj = parser.parse(text);
-
-			const fiats = obj?.["gesmes:Envelope"]?.Cube?.Cube?.Cube || [];
-
-			fiats.forEach((fiat: any) => {
-				const currency = fiat["@_currency"];
-				const rate = parseFloat(fiat["@_rate"]);
-				this.rates[currency] = rate;
+			Object.keys(data.rates).forEach((currency) => {
+				this.rates[currency] = data.rates[currency];
 			});
 
 			this.lastUpdate = new Date();
