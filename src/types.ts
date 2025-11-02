@@ -2,6 +2,7 @@ export interface ConfigType {
 	server: {
 		port: number;
 		host: string;
+		token: string | null;
 	};
 	logger: {
 		level: number;

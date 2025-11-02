@@ -77,7 +77,7 @@ export namespace MetricsExporter {
 			});
 		}
 
-		lines.push("# EOF");
+		lines.push("# EOF\n");
 
 		return lines.join("\n");
 	}
