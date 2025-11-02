@@ -20,6 +20,7 @@ export interface AssetConfig {
 	quantity: number;
 	exchange: string;
 	currency: string;
+	owner: string;
 }
 
 export interface PriceData {
@@ -35,4 +36,5 @@ export interface AssetMetrics {
 	currentPrice: number;
 	value: number;
 	currency: string;
+	owner: string;
 }

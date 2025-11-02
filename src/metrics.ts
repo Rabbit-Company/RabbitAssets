@@ -12,7 +12,15 @@ export namespace MetricsExporter {
 
 		const lines: string[] = [];
 		const timestamp = Date.now();
-		let totalValue = 0;
+
+		// Group metrics by owner first
+		const metricsByOwner = new Map<string, AssetMetrics[]>();
+		metrics.forEach((metric) => {
+			if (!metricsByOwner.has(metric.owner)) {
+				metricsByOwner.set(metric.owner, []);
+			}
+			metricsByOwner.get(metric.owner)!.push(metric);
+		});
 
 		// Add HELP and TYPE metadata
 		if (includeHelp) {
@@ -35,46 +43,49 @@ export namespace MetricsExporter {
 			);
 		}
 
-		// Calculate total value first
-		metrics.forEach((metric) => {
-			totalValue += metric.value;
-		});
+		// Generate metrics per owner
+		for (const [owner, ownerMetrics] of metricsByOwner) {
+			// Calculate total value for this owner
+			const ownerTotalValue = ownerMetrics.reduce((sum, metric) => sum + metric.value, 0);
 
-		// Generate asset-specific metrics
-		metrics.forEach((metric) => {
-			const baseLabels = `symbol="${escapeLabelValue(metric.symbol)}",currency="${escapeLabelValue(metric.currency)}"`;
-			const valuePercentage = totalValue > 0 ? (metric.value / totalValue) * 100 : 0;
-			const timestampSuffix = enableTimestamps ? ` ${timestamp}` : "";
+			// Generate asset-specific metrics for this owner
+			ownerMetrics.forEach((metric) => {
+				const baseLabels = `symbol="${escapeLabelValue(metric.symbol)}",currency="${escapeLabelValue(metric.currency)}",owner="${escapeLabelValue(
+					metric.owner
+				)}"`;
+				const valuePercentage = ownerTotalValue > 0 ? (metric.value / ownerTotalValue) * 100 : 0;
+				const timestampSuffix = enableTimestamps ? ` ${timestamp}` : "";
 
-			// Asset price
-			lines.push(`asset_price{${baseLabels}} ${metric.currentPrice}${timestampSuffix}`);
+				// Asset price
+				lines.push(`asset_price{${baseLabels}} ${metric.currentPrice}${timestampSuffix}`);
 
-			// Asset quantity
-			lines.push(`asset_quantity{${baseLabels}} ${metric.quantity}${timestampSuffix}`);
+				// Asset quantity
+				lines.push(`asset_quantity{${baseLabels}} ${metric.quantity}${timestampSuffix}`);
 
-			// Asset value
-			lines.push(`asset_value{${baseLabels}} ${metric.value}${timestampSuffix}`);
+				// Asset value
+				lines.push(`asset_value{${baseLabels}} ${metric.value}${timestampSuffix}`);
 
-			// Asset value as percentage of portfolio
-			lines.push(`asset_value_percentage{${baseLabels}} ${valuePercentage}${timestampSuffix}`);
-		});
-
-		// Add portfolio-level metrics
-		if (metrics.length > 0) {
-			const portfolioLabelsStr = generatePortfolioLabels(portfolioLabels);
-			const timestampSuffix = enableTimestamps ? ` ${timestamp}` : "";
-
-			// Total portfolio value
-			lines.push(`portfolio_total_value{${portfolioLabelsStr}} ${totalValue}${timestampSuffix}`);
-
-			// Portfolio asset count
-			lines.push(`portfolio_assets{${portfolioLabelsStr}} ${metrics.length}${timestampSuffix}`);
-
-			// Currency distribution
-			const currencyDistribution = calculateCurrencyDistribution(metrics);
-			Object.entries(currencyDistribution).forEach(([currency, percentage]) => {
-				lines.push(`portfolio_currency_percentage{${portfolioLabelsStr},currency="${escapeLabelValue(currency)}"} ${percentage}${timestampSuffix}`);
+				// Asset value as percentage of owner's portfolio
+				lines.push(`asset_value_percentage{${baseLabels}} ${valuePercentage}${timestampSuffix}`);
 			});
+
+			// Add portfolio-level metrics for this owner
+			if (ownerMetrics.length > 0) {
+				const portfolioLabelsStr = generatePortfolioLabels({ ...portfolioLabels, owner });
+				const timestampSuffix = enableTimestamps ? ` ${timestamp}` : "";
+
+				// Total portfolio value for this owner
+				lines.push(`portfolio_total_value{${portfolioLabelsStr}} ${ownerTotalValue}${timestampSuffix}`);
+
+				// Portfolio asset count for this owner
+				lines.push(`portfolio_assets{${portfolioLabelsStr}} ${ownerMetrics.length}${timestampSuffix}`);
+
+				// Currency distribution for this owner
+				const currencyDistribution = calculateCurrencyDistribution(ownerMetrics);
+				Object.entries(currencyDistribution).forEach(([currency, percentage]) => {
+					lines.push(`portfolio_currency_percentage{${portfolioLabelsStr},currency="${escapeLabelValue(currency)}"} ${percentage}${timestampSuffix}`);
+				});
+			}
 		}
 
 		lines.push("# EOF\n");
@@ -90,22 +101,46 @@ export namespace MetricsExporter {
 		totalValue: number;
 		assetCount: number;
 		currencyBreakdown: Record<string, number>;
-		topAssets: Array<{ symbol: string; value: number; percentage: number }>;
+		topAssets: Array<{ symbol: string; value: number; percentage: number; owner: string }>;
+		owners: Record<string, { totalValue: number; assetCount: number; currencyBreakdown: Record<string, number> }>;
 	} {
-		const totalValue = metrics.reduce((sum, metric) => sum + metric.value, 0);
-
-		// Currency breakdown
-		const currencyBreakdown: Record<string, number> = {};
+		// Group by owner first
+		const metricsByOwner = new Map<string, AssetMetrics[]>();
 		metrics.forEach((metric) => {
-			currencyBreakdown[metric.currency] = (currencyBreakdown[metric.currency] || 0) + metric.value;
+			if (!metricsByOwner.has(metric.owner)) {
+				metricsByOwner.set(metric.owner, []);
+			}
+			metricsByOwner.get(metric.owner)!.push(metric);
 		});
 
-		// Top assets by value
+		// Calculate per-owner summaries
+		const owners: Record<string, { totalValue: number; assetCount: number; currencyBreakdown: Record<string, number> }> = {};
+
+		for (const [owner, ownerMetrics] of metricsByOwner) {
+			const ownerTotalValue = ownerMetrics.reduce((sum, metric) => sum + metric.value, 0);
+			const ownerCurrencyBreakdown: Record<string, number> = {};
+
+			ownerMetrics.forEach((metric) => {
+				ownerCurrencyBreakdown[metric.currency] = (ownerCurrencyBreakdown[metric.currency] || 0) + metric.value;
+			});
+
+			owners[owner] = {
+				totalValue: ownerTotalValue,
+				assetCount: ownerMetrics.length,
+				currencyBreakdown: ownerCurrencyBreakdown,
+			};
+		}
+
+		// Global totals (across all owners)
+		const totalValue = metrics.reduce((sum, metric) => sum + metric.value, 0);
+
+		// Top assets across all owners
 		const topAssets = metrics
 			.map((metric) => ({
 				symbol: metric.symbol,
 				value: metric.value,
 				percentage: totalValue > 0 ? (metric.value / totalValue) * 100 : 0,
+				owner: metric.owner,
 			}))
 			.sort((a, b) => b.value - a.value)
 			.slice(0, 10);
@@ -113,8 +148,9 @@ export namespace MetricsExporter {
 		return {
 			totalValue,
 			assetCount: metrics.length,
-			currencyBreakdown,
+			currencyBreakdown: calculateCurrencyDistribution(metrics), // Global distribution
 			topAssets,
+			owners,
 		};
 	}
 
@@ -124,12 +160,7 @@ export namespace MetricsExporter {
 	}
 
 	function generatePortfolioLabels(customLabels: Record<string, string>): string {
-		const defaultLabels = {
-			portfolio: "default",
-			version: "1.0",
-		};
-
-		const labels = { ...defaultLabels, ...customLabels };
+		const labels = { ...customLabels };
 		return Object.entries(labels)
 			.map(([key, value]) => `${key}="${escapeLabelValue(value)}"`)
 			.join(",");

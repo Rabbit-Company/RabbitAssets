@@ -81,17 +81,13 @@ export class MonitorManager {
 			return;
 		}
 
-		// Extract symbols and quantities
-		const symbols = assets.map((a) => a.symbol);
-		const assetsMap = assets.reduce((acc, asset) => {
-			acc[asset.symbol] = asset.quantity;
-			return acc;
-		}, {} as Record<string, number>);
+		// Extract symbols
+		const symbols = [...new Set(assets.map((asset) => asset.symbol))];
 
 		// Determine if we should use WebSocket
 		const useWebSocket = ["rabbitstocks", "binance", "kraken", "coinbase"].includes(exchangeName); // Configure per exchange
 
-		const monitor = new Monitor(exchange, 30000, assetsMap, useWebSocket, this.fiatService);
+		const monitor = new Monitor(exchange, 30000, assets, useWebSocket, this.fiatService);
 
 		// Store monitor and asset mappings
 		this.monitors.set(exchangeName, monitor);

@@ -1,19 +1,18 @@
-import { Config } from "./config";
 import type { BaseExchange } from "./exchanges/base-exchange";
 import { Logger } from "./logger";
 import type { FiatService } from "./services/fiat-service";
-import type { AssetMetrics, PriceData } from "./types";
+import type { AssetConfig, AssetMetrics, PriceData } from "./types";
 
 export class Monitor {
 	protected exchange: BaseExchange;
 	protected pollInterval: number;
-	protected assets: Record<string, number>;
+	protected assets: AssetConfig[];
 	protected useWebSocket: boolean;
 	protected pollIntervalId: NodeJS.Timeout | null = null;
 	protected fiatService: FiatService;
 	protected onPriceUpdateCallback?: (data: PriceData) => void;
 
-	constructor(exchange: BaseExchange, pollInterval: number, assets: Record<string, number>, useWebSocket: boolean = true, fiatService: FiatService) {
+	constructor(exchange: BaseExchange, pollInterval: number, assets: AssetConfig[], useWebSocket: boolean = true, fiatService: FiatService) {
 		this.exchange = exchange;
 		this.pollInterval = pollInterval;
 		this.assets = assets;
@@ -25,7 +24,7 @@ export class Monitor {
 	}
 
 	public async startMonitoring(): Promise<void> {
-		const symbols = Object.keys(this.assets);
+		const symbols = [...new Set(this.assets.map((asset) => asset.symbol))];
 
 		if (this.useWebSocket && this.exchange.connectWebSocket) {
 			try {
@@ -67,7 +66,7 @@ export class Monitor {
 
 	private async fetchPricesViaRest(): Promise<void> {
 		try {
-			const symbols = Object.keys(this.assets);
+			const symbols = [...new Set(this.assets.map((asset) => asset.symbol))];
 			await this.exchange.fetchPricesRest(symbols, this.fiatService);
 			Logger.debug(`[${this.exchange.constructor.name}] Prices updated`);
 		} catch (error: any) {
@@ -97,11 +96,11 @@ export class Monitor {
 	public getAssetMetrics(): AssetMetrics[] {
 		const metrics: AssetMetrics[] = [];
 
-		for (const [symbol, quantity] of Object.entries(this.assets)) {
-			const priceData = this.exchange.getPrice(symbol);
+		for (const asset of this.assets) {
+			const priceData = this.exchange.getPrice(asset.symbol);
 			if (priceData && priceData.price > 0) {
 				let price = priceData.price;
-				let displayCurrency = Config.get("assets").find((a) => a.symbol === priceData.symbol)?.currency || priceData.currency;
+				let displayCurrency = asset.currency;
 
 				// Convert to desired currency if currencies differ
 				if (priceData.currency !== displayCurrency) {
@@ -109,16 +108,17 @@ export class Monitor {
 						price = this.fiatService.convert(price, priceData.currency, displayCurrency);
 					} catch (error: any) {
 						displayCurrency = priceData.currency;
-						Logger.warn(`Currency conversion failed for ${symbol}: ${error.message}`);
+						Logger.warn(`Currency conversion failed for ${asset.symbol} (${asset.owner}): ${error.message}`);
 					}
 				}
 
 				metrics.push({
-					symbol,
-					quantity,
+					symbol: asset.symbol,
+					quantity: asset.quantity,
 					currentPrice: price,
-					value: quantity * price,
+					value: asset.quantity * price,
 					currency: displayCurrency,
+					owner: asset.owner,
 				});
 			}
 		}
