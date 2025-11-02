@@ -88,7 +88,7 @@ export namespace MetricsExporter {
 			}
 		}
 
-		lines.push("# EOF\n");
+		lines.push("# EOF");
 
 		return lines.join("\n");
 	}
