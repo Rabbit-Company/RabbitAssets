@@ -186,6 +186,7 @@ Example response:
 		"currentPrice": 45000.5,
 		"value": 1944.56,
 		"currency": "USD",
+		"exchange": "binance",
 		"owner": "default"
 	},
 	{
@@ -194,6 +195,7 @@ Example response:
 		"currentPrice": 2500.75,
 		"value": 1605.48,
 		"currency": "USD",
+		"exchange": "binance",
 		"owner": "default"
 	}
 ]
