@@ -200,3 +200,9 @@ Example response:
 	}
 ]
 ```
+
+## [Grafana Dashboard](https://grafana.com/orgs/rabbitcompany/dashboards/24333)
+
+![RabbitAssets](/screenshots/RabbitAssets.png?raw=true "Grafana Dashboard")
+
+Pre-made Grafana dashboard can be downloaded from here: https://grafana.com/orgs/rabbitcompany/dashboards/24333
