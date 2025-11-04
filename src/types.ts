@@ -36,5 +36,6 @@ export interface AssetMetrics {
 	currentPrice: number;
 	value: number;
 	currency: string;
+	exchange: string;
 	owner: string;
 }

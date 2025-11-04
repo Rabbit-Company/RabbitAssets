@@ -118,6 +118,7 @@ export class Monitor {
 					currentPrice: price,
 					value: asset.quantity * price,
 					currency: displayCurrency,
+					exchange: asset.exchange,
 					owner: asset.owner,
 				});
 			}
