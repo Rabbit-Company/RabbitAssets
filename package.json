@@ -1,6 +1,6 @@
 {
 	"name": "rabbitassets",
-	"version": "1.2.0",
+	"version": "1.3.0",
 	"description": "Asset price monitoring system with OpenMetrics export",
 	"module": "src/index.ts",
 	"type": "module",
