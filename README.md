@@ -1,11 +1,11 @@
 # RabbitAssets 🐰📈
 
-A high-performance asset price monitoring system built with Bun that tracks cryptocurrency, stock, and fiat currency prices across multiple exchanges and exports metrics in OpenMetrics format for Prometheus.
+A high-performance asset price monitoring system built with Bun that tracks cryptocurrency, stock, metal, and fiat currency prices across multiple exchanges and exports metrics in OpenMetrics format for Prometheus.
 
 ## Features
 
 - 🚀 Blazing Fast - Built with Bun for optimal performance
-- 📊 Multi-Exchange Support - Binance, Kraken, Coinbase, RabbitStocks, and Fiat currencies
+- 📊 Multi-Exchange Support - Binance, Kraken, Coinbase, RabbitStocks, Metals, and Fiat currencies
 - 🌍 Multi-Currency Portfolio - Automatic currency conversion with real-time forex rates
 - 🎯 OpenMetrics Export - Prometheus-compatible metrics endpoint
 - 🔄 Real-time Updates - WebSocket connections for live price updates
@@ -16,11 +16,12 @@ A high-performance asset price monitoring system built with Bun that tracks cryp
 
 ## Supported Exchanges
 
+- [**Fiat**](https://github.com/Rabbit-Company/RabbitForexAPI) - Forex currency conversion rates
+- [**Metal**](https://github.com/Rabbit-Company/RabbitForexAPI) - Metal market data
 - [**RabbitStocks**](https://github.com/Rabbit-Company/RabbitStockAPI) - Stock market data
 - **Binance** - Cryptocurrency prices via WebSocket
 - **Kraken** - Cryptocurrency prices via WebSocket
 - **Coinbase** - Cryptocurrency prices via WebSocket
-- [**Fiat**](https://github.com/Rabbit-Company/RabbitForexAPI) - Forex currency conversion rates
 
 ## Quick Start
 
@@ -56,6 +57,20 @@ Create a `config.json` file:
 			"exchange": "fiat",
 			"currency": "EUR",
 			"owner": "ziga"
+		},
+		{
+			"symbol": "GOLD",
+			"quantity": 100,
+			"exchange": "metal",
+			"currency": "EUR",
+			"owner": "ziga"
+		},
+		{
+			"symbol": "SILVER",
+			"quantity": 500,
+			"exchange": "metal",
+			"currency": "EUR",
+			"owner": "default"
 		},
 		{
 			"symbol": "UBNT",

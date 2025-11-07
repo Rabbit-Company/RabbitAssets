@@ -8,6 +8,7 @@ import { CoinbaseExchange } from "./exchanges/coinbase";
 import { FiatService } from "./services/fiat-service";
 import { FiatExchange } from "./exchanges/fiat";
 import { RabbitStocksExchange } from "./exchanges/rabbitstocks";
+import { MetalExchange } from "./exchanges/metal";
 
 interface ExchangeConstructor {
 	new (): BaseExchange;
@@ -15,12 +16,11 @@ interface ExchangeConstructor {
 
 const EXCHANGE_REGISTRY: Record<string, ExchangeConstructor> = {
 	fiat: FiatExchange,
+	metal: MetalExchange,
 	rabbitstocks: RabbitStocksExchange,
 	binance: BinanceExchange,
 	kraken: KrakenExchange,
 	coinbase: CoinbaseExchange,
-	// coingecko: CoinGeckoExchange, // Add later
-	// trading212: Trading212Exchange, // Add later
 };
 
 export class MonitorManager {
