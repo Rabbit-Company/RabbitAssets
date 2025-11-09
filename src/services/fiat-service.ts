@@ -1,17 +1,16 @@
 import { Logger } from "../logger";
 
 interface FiatRates {
-	[currency: string]: number; // USD to target currency rate
+	[currency: string]: number;
 }
 
 export class FiatService {
 	private rates: FiatRates = {};
 	private lastUpdate: Date | null = null;
-	private updateInterval: number = 30; // 30 seconds
+	private updateInterval: number = 30000; // 30 seconds
 	private intervalId: NodeJS.Timeout | null = null;
 
 	constructor() {
-		// Base rate for USD
 		this.rates.USD = 1;
 	}
 
@@ -30,16 +29,16 @@ export class FiatService {
 			});
 
 			this.lastUpdate = new Date();
-			Logger.debug(`Fiat and metal rates updated: ${Object.keys(this.rates).join(", ")}`);
+			Logger.debug(`Fiat rates updated: ${Object.keys(this.rates).join(", ")}`);
 		} catch (err: any) {
-			Logger.error("Failed to update fiat and metal rates:", err);
+			Logger.error("Failed to update fiat rates:", err);
 		}
 	}
 
 	startPeriodicUpdate(): void {
 		this.intervalId = setInterval(() => {
 			this.updateRates();
-		}, this.updateInterval * 1000);
+		}, this.updateInterval);
 	}
 
 	stop(): void {
@@ -50,18 +49,15 @@ export class FiatService {
 	}
 
 	convert(amount: number, fromCurrency: string, toCurrency: string): number {
-		// Convert through USD as base
 		if (fromCurrency === toCurrency) return amount;
 
 		if (fromCurrency !== "USD") {
-			// Convert to USD first
 			const usdRate = this.rates[fromCurrency];
 			if (!usdRate) throw new Error(`Unknown currency: ${fromCurrency}`);
 			amount = amount / usdRate;
 		}
 
 		if (toCurrency !== "USD") {
-			// Convert from USD to target
 			const targetRate = this.rates[toCurrency];
 			if (!targetRate) throw new Error(`Unknown currency: ${toCurrency}`);
 			amount = amount * targetRate;

@@ -1,14 +1,11 @@
-import { BinanceExchange } from "./exchanges/binance";
 import { BaseExchange } from "./exchanges/base-exchange";
-import type { AssetConfig, ConfigType, PriceData } from "./types";
-import { Monitor } from "./monitor";
-import { Logger } from "./logger";
-import { KrakenExchange } from "./exchanges/kraken";
-import { CoinbaseExchange } from "./exchanges/coinbase";
-import { FiatService } from "./services/fiat-service";
 import { FiatExchange } from "./exchanges/fiat";
-import { RabbitStocksExchange } from "./exchanges/rabbitstocks";
 import { MetalExchange } from "./exchanges/metal";
+import { CryptoExchange } from "./exchanges/crypto";
+import { StockExchange } from "./exchanges/stock";
+import type { AssetConfig, ConfigType, AssetMetrics, PriceData } from "./types";
+import { FiatService } from "./services/fiat-service";
+import { Logger } from "./logger";
 
 interface ExchangeConstructor {
 	new (): BaseExchange;
@@ -17,17 +14,16 @@ interface ExchangeConstructor {
 const EXCHANGE_REGISTRY: Record<string, ExchangeConstructor> = {
 	fiat: FiatExchange,
 	metal: MetalExchange,
-	rabbitstocks: RabbitStocksExchange,
-	binance: BinanceExchange,
-	kraken: KrakenExchange,
-	coinbase: CoinbaseExchange,
+	crypto: CryptoExchange,
+	stock: StockExchange,
 };
 
 export class MonitorManager {
-	private monitors = new Map<string, Monitor>();
-	private assetMonitors = new Map<string, string>();
-	private unsupportedAssets: AssetConfig[] = [];
+	private exchanges = new Map<string, BaseExchange>();
+	private assetsByExchange = new Map<string, AssetConfig[]>();
 	private fiatService: FiatService;
+	private pollInterval = 30000; // 30 seconds
+	private intervalId?: NodeJS.Timeout;
 
 	constructor() {
 		this.fiatService = new FiatService();
@@ -36,122 +32,122 @@ export class MonitorManager {
 	async initialize(config: ConfigType): Promise<void> {
 		await this.fiatService.initialize();
 
-		const assets = config.assets;
-
 		// Group assets by exchange
-		const assetsByExchange = new Map<string, AssetConfig[]>();
-
-		for (const asset of assets) {
-			if (!assetsByExchange.has(asset.exchange)) {
-				assetsByExchange.set(asset.exchange, []);
+		config.assets.forEach((asset) => {
+			if (!this.assetsByExchange.has(asset.exchange)) {
+				this.assetsByExchange.set(asset.exchange, []);
 			}
-			assetsByExchange.get(asset.exchange)!.push(asset);
-		}
-
-		// Create monitors only for supported exchanges
-		for (const [exchangeName, exchangeAssets] of assetsByExchange) {
-			await this.createExchangeMonitor(exchangeName, exchangeAssets);
-		}
-
-		// Log any unsupported exchanges
-		if (this.unsupportedAssets.length > 0) {
-			const unsupportedExchanges = [...new Set(this.unsupportedAssets.map((a) => a.exchange))];
-			Logger.warn(`Skipped ${this.unsupportedAssets.length} assets from unsupported exchanges: ${unsupportedExchanges.join(", ")}`);
-			Logger.info(`Unsupported assets: ${this.unsupportedAssets.map((a) => a.symbol).join(", ")}`);
-		}
-	}
-
-	private async createExchangeMonitor(exchangeName: string, assets: AssetConfig[]): Promise<void> {
-		// Check if exchange is supported
-		const ExchangeClass = EXCHANGE_REGISTRY[exchangeName];
-		if (!ExchangeClass) {
-			// Add to unsupported list and skip
-			this.unsupportedAssets.push(...assets);
-			Logger.warn(`Exchange '${exchangeName}' is not supported. Skipping assets: ${assets.map((a) => a.symbol).join(", ")}`);
-			return;
-		}
-
-		let exchange: BaseExchange;
-
-		try {
-			exchange = new ExchangeClass();
-		} catch (error: any) {
-			Logger.error(`Failed to create exchange instance for ${exchangeName}:`, error);
-			this.unsupportedAssets.push(...assets);
-			return;
-		}
-
-		// Extract symbols
-		const symbols = [...new Set(assets.map((asset) => asset.symbol))];
-
-		// Determine if we should use WebSocket
-		const useWebSocket = ["rabbitstocks", "binance", "kraken", "coinbase"].includes(exchangeName); // Configure per exchange
-
-		const monitor = new Monitor(exchange, 30000, assets, useWebSocket, this.fiatService);
-
-		// Store monitor and asset mappings
-		this.monitors.set(exchangeName, monitor);
-		assets.forEach((asset) => {
-			this.assetMonitors.set(asset.symbol, exchangeName);
+			this.assetsByExchange.get(asset.exchange)!.push(asset);
 		});
 
-		// Start monitoring
-		try {
-			await monitor.startMonitoring();
-			Logger.info(`Started monitoring ${exchangeName} for: ${symbols.join(", ")}`);
-		} catch (error: any) {
-			Logger.error(`Failed to start monitoring for ${exchangeName}:`, error);
-			// Remove failed monitor
-			this.monitors.delete(exchangeName);
-			assets.forEach((asset) => this.assetMonitors.delete(asset.symbol));
-			this.unsupportedAssets.push(...assets);
+		for (const [exchangeName, assets] of this.assetsByExchange) {
+			const exchange = this.createExchange(exchangeName);
+			if (exchange) {
+				this.exchanges.set(exchangeName, exchange);
+
+				exchange.on("priceUpdate", (priceData: PriceData) => {
+					Logger.silly(`Price update from ${exchangeName}: ${priceData.symbol} = ${priceData.price} ${priceData.currency}`);
+				});
+
+				const symbols = [...new Set(assets.map((a) => a.symbol))];
+				await exchange.updatePrices(symbols);
+				Logger.info(`Initialized ${exchangeName} exchange with symbols: ${symbols.join(", ")}`);
+			} else {
+				Logger.warn(`Unsupported exchange: ${exchangeName}. Assets: ${assets.map((a) => a.symbol).join(", ")}`);
+			}
 		}
+
+		this.startPolling();
+		Logger.info(`Started polling all exchanges every ${this.pollInterval}ms`);
 	}
 
-	getAssetMetrics() {
-		const allMetrics = [];
+	private createExchange(exchangeName: string): BaseExchange | null {
+		const ExchangeClass = EXCHANGE_REGISTRY[exchangeName];
+		if (!ExchangeClass) {
+			return null;
+		}
+		return new ExchangeClass();
+	}
 
-		for (const monitor of this.monitors.values()) {
-			allMetrics.push(...monitor.getAssetMetrics());
+	private startPolling(): void {
+		this.intervalId = setInterval(() => {
+			this.pollAllExchanges();
+		}, this.pollInterval);
+	}
+
+	private async pollAllExchanges(): Promise<void> {
+		const promises = Array.from(this.exchanges.entries()).map(async ([exchangeName, exchange]) => {
+			const assets = this.assetsByExchange.get(exchangeName) || [];
+			const symbols = [...new Set(assets.map((a) => a.symbol))];
+
+			if (symbols.length > 0) {
+				await exchange.updatePrices(symbols);
+			}
+		});
+
+		await Promise.allSettled(promises);
+	}
+
+	public getAssetMetrics(): AssetMetrics[] {
+		const allMetrics: AssetMetrics[] = [];
+
+		for (const [exchangeName, assets] of this.assetsByExchange) {
+			const exchange = this.exchanges.get(exchangeName);
+			if (!exchange) continue;
+
+			for (const asset of assets) {
+				const priceData = exchange.getPrice(asset.symbol);
+				if (priceData && priceData.price > 0) {
+					let price = priceData.price;
+					let displayCurrency = asset.currency;
+
+					// Convert to desired currency if currencies differ
+					if (priceData.currency !== displayCurrency) {
+						try {
+							price = this.fiatService.convert(price, priceData.currency, displayCurrency);
+						} catch (error: any) {
+							displayCurrency = priceData.currency;
+							Logger.warn(`Currency conversion failed for ${asset.symbol} (${asset.owner}): ${error.message}`);
+						}
+					}
+
+					allMetrics.push({
+						symbol: asset.symbol,
+						quantity: asset.quantity,
+						currentPrice: price,
+						value: asset.quantity * price,
+						currency: displayCurrency,
+						exchange: asset.exchange,
+						owner: asset.owner,
+					});
+				}
+			}
 		}
 
 		return allMetrics;
 	}
 
-	getUnsupportedAssets(): AssetConfig[] {
-		return [...this.unsupportedAssets];
-	}
-
-	getSupportedExchanges(): string[] {
-		return Array.from(this.monitors.keys());
-	}
-
-	getStatus() {
+	public getStatus() {
 		const status: Record<string, any> = {};
 
-		for (const [exchangeName, monitor] of this.monitors) {
+		for (const [exchangeName, exchange] of this.exchanges) {
+			const assets = this.assetsByExchange.get(exchangeName) || [];
 			status[exchangeName] = {
-				connected: monitor.isWebSocketConnected(),
-				type: monitor.isWebSocketConnected() ? "WebSocket" : "REST",
-				assets: Array.from(this.assetMonitors.entries())
-					.filter(([_, ex]) => ex === exchangeName)
-					.map(([symbol]) => symbol),
+				assets: assets.map((a) => a.symbol),
+				prices: exchange.getAllPrices().length,
+				lastUpdate: new Date().toISOString(),
 			};
 		}
 
-		return {
-			supported: status,
-			unsupported: {
-				exchanges: [...new Set(this.unsupportedAssets.map((a) => a.exchange))],
-				assetCount: this.unsupportedAssets.length,
-				assets: this.unsupportedAssets.map((a) => a.symbol),
-			},
-		};
+		return status;
 	}
 
-	async stopAll() {
-		for (const monitor of this.monitors.values()) {
-			monitor.stopMonitoring();
+	public stopAll(): void {
+		if (this.intervalId) {
+			clearInterval(this.intervalId);
+			this.intervalId = undefined;
 		}
+		this.fiatService.stop();
+		Logger.info("Stopped all monitoring");
 	}
 }

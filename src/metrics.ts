@@ -9,10 +9,8 @@ export interface MetricsOptions {
 const EXCHANGE_TYPE_MAPPING: Record<string, string> = {
 	fiat: "fiat",
 	metal: "metal",
-	rabbitstocks: "stock",
-	binance: "crypto",
-	kraken: "crypto",
-	coinbase: "crypto",
+	crypto: "crypto",
+	stock: "stock",
 };
 
 export namespace MetricsExporter {

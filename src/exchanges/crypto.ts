@@ -1,13 +1,13 @@
 import { BaseExchange } from "./base-exchange";
 import type { PriceData } from "../types";
 
-export class FiatExchange extends BaseExchange {
+export class CryptoExchange extends BaseExchange {
 	constructor() {
-		super("Fiat");
+		super("Crypto");
 	}
 
 	async fetchPrices(symbols: string[]): Promise<PriceData[]> {
-		const response = await fetch("https://forex.rabbitmonitor.com/v1/rates/USD", {
+		const response = await fetch("https://forex.rabbitmonitor.com/v1/crypto/rates/USD", {
 			signal: AbortSignal.timeout(5000),
 		});
 

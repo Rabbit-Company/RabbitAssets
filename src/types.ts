@@ -10,11 +10,6 @@ export interface ConfigType {
 	assets: AssetConfig[];
 }
 
-export interface ExchangeConfig {
-	name: string;
-	pollInterval: number;
-}
-
 export interface AssetConfig {
 	symbol: string;
 	quantity: number;

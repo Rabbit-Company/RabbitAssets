@@ -1,23 +1,29 @@
-import type { FiatService } from "../services/fiat-service.js";
-import { BaseExchange } from "./base-exchange.js";
+import { BaseExchange } from "./base-exchange";
+import type { PriceData } from "../types";
 
 export class MetalExchange extends BaseExchange {
-	protected name = "Metal";
-
-	protected getWebSocketURL(symbols: string[]): string {
-		return "";
+	constructor() {
+		super("Metal");
 	}
 
-	protected handleMessage(data: any): void {}
+	async fetchPrices(symbols: string[]): Promise<PriceData[]> {
+		const response = await fetch("https://forex.rabbitmonitor.com/v1/metals/rates/USD", {
+			signal: AbortSignal.timeout(5000),
+		});
 
-	override async fetchPricesRest(symbols: string[], fiatService: FiatService) {
-		symbols.forEach((symbol) => {
-			this.updatePrice({
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+
+		return symbols
+			.filter((symbol) => data.rates && data.rates[symbol])
+			.map((symbol) => ({
 				symbol,
-				price: fiatService.getRate(symbol, "USD"),
+				price: 1 / data.rates[symbol],
 				currency: "USD",
 				timestamp: Date.now(),
-			});
-		});
+			}));
 	}
 }

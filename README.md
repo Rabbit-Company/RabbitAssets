@@ -5,10 +5,10 @@ A high-performance asset price monitoring system built with Bun that tracks cryp
 ## Features
 
 - 🚀 Blazing Fast - Built with Bun for optimal performance
-- 📊 Multi-Exchange Support - Binance, Kraken, Coinbase, RabbitStocks, Metals, and Fiat currencies
+- 📊 Multi-Exchange Support - Crypto, Stock, Metals, and Fiat currencies
 - 🌍 Multi-Currency Portfolio - Automatic currency conversion with real-time forex rates
 - 🎯 OpenMetrics Export - Prometheus-compatible metrics endpoint
-- 🔄 Real-time Updates - WebSocket connections for live price updates
+- 🔄 Real-time Updates - Price updates every ~30 seconds
 - 👥 Multi-Owner Support - Track assets for multiple portfolio owners
 - 🐳 Docker Ready - Easy deployment with Docker and Docker Compose
 - 🔐 Bearer Authentication - Optional token-based API security
@@ -18,10 +18,8 @@ A high-performance asset price monitoring system built with Bun that tracks cryp
 
 - [**Fiat**](https://github.com/Rabbit-Company/RabbitForexAPI) - Forex currency conversion rates
 - [**Metal**](https://github.com/Rabbit-Company/RabbitForexAPI) - Metal market data
-- [**RabbitStocks**](https://github.com/Rabbit-Company/RabbitStockAPI) - Stock market data
-- **Binance** - Cryptocurrency prices via WebSocket
-- **Kraken** - Cryptocurrency prices via WebSocket
-- **Coinbase** - Cryptocurrency prices via WebSocket
+- [**Crypto**](https://github.com/Rabbit-Company/RabbitForexAPI) - Crypto market data
+- [**Stock**](https://github.com/Rabbit-Company/RabbitForexAPI) - Stock market data
 
 ## Quick Start
 
@@ -75,63 +73,63 @@ Create a `config.json` file:
 		{
 			"symbol": "UBNT",
 			"quantity": 3.624,
-			"exchange": "rabbitstocks",
+			"exchange": "stock",
 			"currency": "EUR",
 			"owner": "default"
 		},
 		{
 			"symbol": "UBNT",
 			"quantity": 1.31,
-			"exchange": "rabbitstocks",
+			"exchange": "stock",
 			"currency": "EUR",
 			"owner": "ziga"
 		},
 		{
 			"symbol": "NET",
 			"quantity": 4.5,
-			"exchange": "rabbitstocks",
+			"exchange": "stock",
 			"currency": "EUR",
 			"owner": "default"
 		},
 		{
 			"symbol": "WISEl",
 			"quantity": 4,
-			"exchange": "rabbitstocks",
+			"exchange": "stock",
 			"currency": "EUR",
 			"owner": "default"
 		},
 		{
 			"symbol": "BTC",
 			"quantity": 0.043212,
-			"exchange": "binance",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "default"
 		},
 		{
 			"symbol": "BTC",
 			"quantity": 0.0003167,
-			"exchange": "binance",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "ziga"
 		},
 		{
 			"symbol": "ETH",
 			"quantity": 0.64232,
-			"exchange": "coinbase",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "default"
 		},
 		{
 			"symbol": "SOL",
 			"quantity": 0.16,
-			"exchange": "coinbase",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "default"
 		},
 		{
 			"symbol": "XMR",
 			"quantity": 2.54,
-			"exchange": "kraken",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "default"
 		}
@@ -201,7 +199,7 @@ Example response:
 		"currentPrice": 45000.5,
 		"value": 1944.56,
 		"currency": "USD",
-		"exchange": "binance",
+		"exchange": "crypto",
 		"owner": "default"
 	},
 	{
@@ -210,7 +208,7 @@ Example response:
 		"currentPrice": 2500.75,
 		"value": 1605.48,
 		"currency": "USD",
-		"exchange": "binance",
+		"exchange": "crypto",
 		"owner": "default"
 	}
 ]

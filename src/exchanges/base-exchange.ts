@@ -1,184 +1,35 @@
 import { EventEmitter } from "events";
 import { Logger } from "../logger";
 import type { PriceData } from "../types";
-import type { FiatService } from "../services/fiat-service";
 
 export abstract class BaseExchange extends EventEmitter {
-	protected ws?: WebSocket;
+	protected name: string;
 	protected prices: Map<string, PriceData> = new Map();
 
-	private reconnecting = false;
-	private lastMessageTime = 0;
-	private watchdogInterval?: NodeJS.Timeout;
-	private reconnectTimeout?: NodeJS.Timeout;
-	private backoff = 1000;
-	private readonly MAX_BACKOFF = 30000;
-	private currentSymbols: string[] = [];
-
-	protected abstract name: string;
-	protected abstract getWebSocketURL(symbols: string[]): string;
-	protected abstract handleMessage(data: any): void;
-
-	// Optional method for exchanges that need to send subscription messages
-	protected async sendSubscriptionMessage(symbols: string[]): Promise<void> {}
-
-	// ------------------------------------------------------
-	// WebSocket lifecycle
-	// ------------------------------------------------------
-	public async connectWebSocket(symbols: string[]): Promise<void> {
-		return new Promise((resolve, reject) => {
-			try {
-				// Store current symbols for reconnection
-				this.currentSymbols = symbols;
-
-				if (this.ws) {
-					const state = this.ws.readyState;
-					if (state === WebSocket.OPEN || state === WebSocket.CONNECTING) {
-						Logger.debug(`[${this.name}] WebSocket already open/connecting (state: ${state})`);
-						return resolve();
-					}
-
-					// Clean up existing connection
-					this.cleanupWebSocket();
-				}
-
-				const url = this.getWebSocketURL(symbols);
-				Logger.info(`[${this.name}] Connecting to ${url}`);
-				this.ws = new WebSocket(url);
-
-				this.ws.onopen = async () => {
-					Logger.info(`[${this.name}] WebSocket connected`);
-					this.lastMessageTime = Date.now();
-					this.reconnecting = false;
-					this.backoff = 1000; // Reset backoff on successful connection
-
-					try {
-						// Send subscription message if the exchange requires it
-						await this.sendSubscriptionMessage(symbols);
-						Logger.debug(`[${this.name}] Subscription message sent successfully`);
-					} catch (err) {
-						Logger.error(`[${this.name}] Failed to send subscription message: ${(err as Error).message}`);
-						// Don't reject the connection - some exchanges might work without subscription
-					}
-
-					this.startWatchdog();
-					resolve();
-				};
-
-				this.ws.onmessage = (event) => {
-					this.lastMessageTime = Date.now();
-					try {
-						const data = JSON.parse(event.data.toString());
-						this.handleMessage(data);
-					} catch (err) {
-						Logger.error(`[${this.name}] JSON parse error: ${(err as Error).message}`);
-					}
-				};
-
-				this.ws.onerror = (err) => {
-					Logger.error(`[${this.name}] WebSocket error: ${JSON.stringify(err)}`);
-					// Don't reject here - let onclose handle reconnection
-					// This prevents breaking the reconnection chain
-				};
-
-				this.ws.onclose = (event) => {
-					Logger.info(`[${this.name}] WebSocket closed: ${event.code} ${event.reason}`);
-					this.scheduleReconnect();
-				};
-			} catch (err) {
-				Logger.error(`[${this.name}] Connection error: ${(err as Error).message}`);
-				this.scheduleReconnect();
-				reject(err);
-			}
-		});
+	constructor(name: string) {
+		super();
+		this.name = name;
 	}
 
-	public disconnectWebSocket(): void {
-		Logger.info(`[${this.name}] Disconnecting WebSocket`);
-		this.cleanupWebSocket();
-		this.reconnecting = false;
-		this.backoff = 1000;
-	}
+	protected abstract fetchPrices(symbols: string[]): Promise<PriceData[]>;
 
-	private cleanupWebSocket(): void {
-		if (this.watchdogInterval) {
-			clearInterval(this.watchdogInterval);
-			this.watchdogInterval = undefined;
-		}
+	public async updatePrices(symbols: string[]): Promise<void> {
+		if (symbols.length === 0) return;
 
-		if (this.reconnectTimeout) {
-			clearTimeout(this.reconnectTimeout);
-			this.reconnectTimeout = undefined;
-		}
+		try {
+			Logger.debug(`[${this.name}] Fetching prices for: ${symbols.join(", ")}`);
+			const prices = await this.fetchPrices(symbols);
 
-		if (this.ws) {
-			// Remove all listeners to prevent memory leaks
-			this.ws.onopen = null;
-			this.ws.onmessage = null;
-			this.ws.onerror = null;
-			this.ws.onclose = null;
-
-			if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
-				this.ws.close(1000, "Manual disconnect");
-			}
-			this.ws = undefined;
-		}
-	}
-
-	protected scheduleReconnect(): void {
-		if (this.reconnecting) {
-			Logger.debug(`[${this.name}] Reconnection already in progress`);
-			return;
-		}
-
-		this.reconnecting = true;
-		this.cleanupWebSocket();
-
-		Logger.warn(`[${this.name}] Attempting reconnect in ${this.backoff / 1000}s... (backoff: ${this.backoff}ms)`);
-
-		this.reconnectTimeout = setTimeout(() => {
-			Logger.info(`[${this.name}] Executing reconnection attempt`);
-			this.reconnecting = false;
-
-			this.connectWebSocket(this.currentSymbols).catch((error) => {
-				Logger.error(`[${this.name}] Reconnection failed: ${error.message}`);
-				// Even if reconnection fails, schedule another attempt
-				this.scheduleReconnect();
+			prices.forEach((price) => {
+				this.updatePrice(price);
+				Logger.debug(`[${this.name}] Updated ${price.symbol}: ${price.price} ${price.currency}`);
 			});
-
-			// Increase backoff for next attempt (with maximum)
-			this.backoff = Math.min(this.backoff * 2, this.MAX_BACKOFF);
-		}, this.backoff);
+		} catch (error: any) {
+			Logger.error(`[${this.name}] Failed to fetch prices:`, error);
+		}
 	}
 
-	private startWatchdog() {
-		if (this.watchdogInterval) clearInterval(this.watchdogInterval);
-
-		this.watchdogInterval = setInterval(() => {
-			// Only check if we have an active connection
-			if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-				return;
-			}
-
-			const silence = Date.now() - this.lastMessageTime;
-			if (silence > 60000) {
-				Logger.warn(`[${this.name}] No messages for ${Math.round(silence / 1000)}s — forcing reconnect`);
-				this.scheduleReconnect();
-			}
-		}, 15000);
-	}
-
-	// ------------------------------------------------------
-	// REST fallback (optional per exchange)
-	// ------------------------------------------------------
-	public async fetchPricesRest(symbols: string[], fiatService: FiatService): Promise<void> {
-		Logger.warn(`[${this.name}] REST fetch not implemented`);
-	}
-
-	// ------------------------------------------------------
-	// Utilities
-	// ------------------------------------------------------
-	protected updatePrice(priceData: PriceData) {
+	protected updatePrice(priceData: PriceData): void {
 		this.prices.set(priceData.symbol, priceData);
 		this.emit("priceUpdate", priceData);
 	}
@@ -191,14 +42,7 @@ export abstract class BaseExchange extends EventEmitter {
 		return Array.from(this.prices.values());
 	}
 
-	public isWebSocketConnected(): boolean {
-		return !!this.ws && this.ws.readyState === WebSocket.OPEN;
-	}
-
-	public async reconnect(): Promise<void> {
-		Logger.info(`[${this.name}] Manual reconnection triggered`);
-		this.backoff = 1000;
-		this.cleanupWebSocket();
-		await this.connectWebSocket(this.currentSymbols);
+	public hasPrice(symbol: string): boolean {
+		return this.prices.has(symbol);
 	}
 }

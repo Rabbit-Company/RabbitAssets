@@ -39,63 +39,63 @@
 		{
 			"symbol": "UBNT",
 			"quantity": 3.624,
-			"exchange": "rabbitstocks",
+			"exchange": "stock",
 			"currency": "EUR",
 			"owner": "default"
 		},
 		{
 			"symbol": "UBNT",
 			"quantity": 1.31,
-			"exchange": "rabbitstocks",
+			"exchange": "stock",
 			"currency": "EUR",
 			"owner": "ziga"
 		},
 		{
 			"symbol": "NET",
 			"quantity": 4.5,
-			"exchange": "rabbitstocks",
+			"exchange": "stock",
 			"currency": "EUR",
 			"owner": "default"
 		},
 		{
 			"symbol": "WISEl",
 			"quantity": 4,
-			"exchange": "rabbitstocks",
+			"exchange": "stock",
 			"currency": "EUR",
 			"owner": "default"
 		},
 		{
 			"symbol": "BTC",
 			"quantity": 0.043212,
-			"exchange": "binance",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "default"
 		},
 		{
 			"symbol": "BTC",
 			"quantity": 0.0003167,
-			"exchange": "binance",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "ziga"
 		},
 		{
 			"symbol": "ETH",
 			"quantity": 0.64232,
-			"exchange": "coinbase",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "default"
 		},
 		{
 			"symbol": "SOL",
 			"quantity": 0.16,
-			"exchange": "coinbase",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "default"
 		},
 		{
 			"symbol": "XMR",
 			"quantity": 2.54,
-			"exchange": "kraken",
+			"exchange": "crypto",
 			"currency": "USD",
 			"owner": "default"
 		}
