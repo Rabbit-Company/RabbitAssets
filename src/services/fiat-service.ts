@@ -54,13 +54,13 @@ export class FiatService {
 		if (fromCurrency !== "USD") {
 			const usdRate = this.rates[fromCurrency];
 			if (!usdRate) throw new Error(`Unknown currency: ${fromCurrency}`);
-			amount = amount / usdRate;
+			amount = amount * usdRate;
 		}
 
 		if (toCurrency !== "USD") {
 			const targetRate = this.rates[toCurrency];
 			if (!targetRate) throw new Error(`Unknown currency: ${toCurrency}`);
-			amount = amount * targetRate;
+			amount = amount / targetRate;
 		}
 
 		return amount;
