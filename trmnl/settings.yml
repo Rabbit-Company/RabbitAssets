@@ -1,0 +1,210 @@
+---
+strategy: polling
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+polling_url: "https://forex.rabbitmonitor.com/v1/rates/{{ base_currency | upcase}}\r\nhttps://forex.rabbitmonitor.com/v1/metals/rates/{{ base_currency | upcase}}\r\nhttps://forex.rabbitmonitor.com/v1/crypto/rates/{{ base_currency | upcase}}\r\nhttps://forex.rabbitmonitor.com/v1/stocks/rates/{{ base_currency | upcase}}"
+polling_headers: ''
+polling_body: ''
+id: 181797
+custom_fields:
+- keyname: about
+  field_type: author_bio
+  name: RabbitAssets
+  category: finance,analytics
+  description: Live asset price monitoring
+  learn_more_url: https://rabbit-company.com
+  github_url: https://github.com/Rabbit-Company/RabbitAssets
+  email_address: info@rabbit-company.com
+- keyname: base_currency
+  field_type: select
+  name: Display Currency
+  description: Select the currency in which you want prices to appear.
+  options:
+  - AED
+  - AFN
+  - ALL
+  - AMD
+  - ANG
+  - AOA
+  - ARS
+  - AUD
+  - AWG
+  - AZN
+  - BAM
+  - BBD
+  - BDT
+  - BGN
+  - BHD
+  - BIF
+  - BMD
+  - BND
+  - BOB
+  - BRL
+  - BSD
+  - BTN
+  - BWP
+  - BYN
+  - BZD
+  - CAD
+  - CDF
+  - CHF
+  - CLP
+  - CNY
+  - COP
+  - CRC
+  - CUC
+  - CUP
+  - CVE
+  - CZK
+  - DJF
+  - DKK
+  - DOP
+  - DZD
+  - EGP
+  - ERN
+  - ETB
+  - EUR
+  - FJD
+  - FKP
+  - GBP
+  - GEL
+  - GGP
+  - GHS
+  - GIP
+  - GMD
+  - GNF
+  - GTQ
+  - GYD
+  - HKD
+  - HNL
+  - HRK
+  - HTG
+  - HUF
+  - IDR
+  - ILS
+  - IMP
+  - INR
+  - IQD
+  - IRR
+  - ISK
+  - JEP
+  - JMD
+  - JOD
+  - JPY
+  - KES
+  - KGS
+  - KHR
+  - KMF
+  - KPW
+  - KRW
+  - KWD
+  - KYD
+  - KZT
+  - LAK
+  - LBP
+  - LKR
+  - LRD
+  - LSL
+  - LYD
+  - MAD
+  - MDL
+  - MGA
+  - MKD
+  - MMK
+  - MNT
+  - MOP
+  - MRU
+  - MUR
+  - MVR
+  - MWK
+  - MXN
+  - MYR
+  - MZN
+  - NAD
+  - NGN
+  - NIO
+  - NOK
+  - NPR
+  - NZD
+  - OMR
+  - PAB
+  - PEN
+  - PGK
+  - PHP
+  - PKR
+  - PLN
+  - PYG
+  - QAR
+  - RON
+  - RSD
+  - RUB
+  - RWF
+  - SAR
+  - SBD
+  - SCR
+  - SDG
+  - SEK
+  - SGD
+  - SHP
+  - SLE
+  - SLL
+  - SOS
+  - SRD
+  - STN
+  - SVC
+  - SYP
+  - SZL
+  - THB
+  - TJS
+  - TMT
+  - TND
+  - TOP
+  - TRY
+  - TTD
+  - TWD
+  - TZS
+  - UAH
+  - UGX
+  - USD
+  - UYU
+  - UZS
+  - VEF
+  - VES
+  - VND
+  - VUV
+  - WST
+  - XAF
+  - XCD
+  - XCG
+  - XOF
+  - XPF
+  - YER
+  - ZAR
+  - ZMW
+  - ZWL
+  default: usd
+  multiple: false
+- keyname: fiat_assets
+  field_type: multi_string
+  name: Fiat Assets
+  description: List of fiat assets you own (symbol=quantity)
+  placeholder: EUR=1543.73
+- keyname: metal_assets
+  field_type: multi_string
+  name: Metal Assets
+  description: List of metal assets you own in grams (symbol=quantity)
+  placeholder: GOLD=3.11
+- keyname: crypto_assets
+  field_type: multi_string
+  name: Crypto Assets
+  description: List of crypto assets you own (symbol=quantity)
+  placeholder: BTC=0.00463127
+- keyname: stock_assets
+  field_type: multi_string
+  name: Stock Assets
+  description: List of stock assets you own (symbol=quantity)
+  placeholder: UBNT=3.652362
+name: RabbitAssets
+refresh_interval: 15

@@ -1,0 +1,176 @@
+{% comment %}
+User base currency (EUR, USD, etc.)
+{% endcomment %}
+{% assign base = trmnl.plugin_settings.custom_fields_values.base_currency | upcase %}
+
+{% comment %}
+Currency symbol mapping
+{% endcomment %}
+
+{% if base == "USD" %}
+  {% assign currency_symbol = "$" %}
+{% elsif base == "EUR" %}
+  {% assign currency_symbol = "€" %}
+{% elsif base == "GBP" %}
+  {% assign currency_symbol = "£" %}
+{% elsif base == "JPY" or base == "CNY" %}
+  {% assign currency_symbol = "¥" %}
+{% elsif base == "UAH" %}
+  {% assign currency_symbol = "₴" %}
+{% elsif base == "INR" %}
+  {% assign currency_symbol = "₹" %}
+{% elsif base == "ILS" %}
+  {% assign currency_symbol = "₪" %}
+{% elsif base == "KRW" %}
+  {% assign currency_symbol = "₩" %}
+{% elsif base == "VND" %}
+  {% assign currency_symbol = "₫" %}
+{% elsif base == "PHP" %}
+  {% assign currency_symbol = "₱" %}
+{% elsif base == "RUB" %}
+  {% assign currency_symbol = "₽" %}
+{% else %}
+  {% assign currency_symbol = "" %}
+{% endif %}
+
+{% comment %}
+Fetch rates
+{% endcomment %}
+{% assign forex = IDX_0 %}
+{% assign metals = IDX_1 %}
+{% assign crypto = IDX_2 %}
+{% assign stocks = IDX_3 %}
+
+{% comment %}
+Initialize totals
+{% endcomment %}
+{% assign total_fiat = 0 %}
+{% assign total_metal = 0 %}
+{% assign total_crypto = 0 %}
+{% assign total_stock = 0 %}
+
+{% comment %}
+Process fiat assets
+{% endcomment %}
+{% assign fiat_assets_string = trmnl.plugin_settings.custom_fields_values.fiat_assets %}
+{% assign fiat_assets = fiat_assets_string | split: ',' %}
+
+{% for asset in fiat_assets %}
+  {% assign asset_parts = asset | split: '=' %}
+  {% if asset_parts.size == 2 %}
+    {% assign symbol = asset_parts[0] | strip %}
+    {% assign qty = asset_parts[1] | strip | times: 1 %}
+    
+    {% if forex.rates[symbol] %}
+      {% assign rate = 1 | divided_by: forex.rates[symbol] %}
+      {% assign asset_value = qty | times: rate %}
+      {% assign total_fiat = total_fiat | plus: asset_value %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% comment %}
+Process metal assets
+{% endcomment %}
+{% assign metal_assets_string = trmnl.plugin_settings.custom_fields_values.metal_assets %}
+{% assign metal_assets = metal_assets_string | split: ',' %}
+
+{% for asset in metal_assets %}
+  {% assign asset_parts = asset | split: '=' %}
+  {% if asset_parts.size == 2 %}
+    {% assign symbol = asset_parts[0] | strip %}
+    {% assign qty = asset_parts[1] | strip | times: 1 %}
+    
+    {% if metals.rates[symbol] %}
+      {% assign rate = 1 | divided_by: metals.rates[symbol] %}
+      {% assign asset_value = qty | times: rate %}
+      {% assign total_metal = total_metal | plus: asset_value %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% comment %}
+Process crypto assets
+{% endcomment %}
+{% assign crypto_assets_string = trmnl.plugin_settings.custom_fields_values.crypto_assets %}
+{% assign crypto_assets = crypto_assets_string | split: ',' %}
+
+{% for asset in crypto_assets %}
+  {% assign asset_parts = asset | split: '=' %}
+  {% if asset_parts.size == 2 %}
+    {% assign symbol = asset_parts[0] | strip %}
+    {% assign qty = asset_parts[1] | strip | times: 1 %}
+    
+    {% if crypto.rates[symbol] %}
+      {% assign rate = 1 | divided_by: crypto.rates[symbol] %}
+      {% assign asset_value = qty | times: rate %}
+      {% assign total_crypto = total_crypto | plus: asset_value %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% comment %}
+Process stock assets
+{% endcomment %}
+{% assign stock_assets_string = trmnl.plugin_settings.custom_fields_values.stock_assets %}
+{% assign stock_assets = stock_assets_string | split: ',' %}
+
+{% for asset in stock_assets %}
+  {% assign asset_parts = asset | split: '=' %}
+  {% if asset_parts.size == 2 %}
+    {% assign symbol = asset_parts[0] | strip %}
+    {% assign qty = asset_parts[1] | strip | times: 1 %}
+    
+    {% if stocks.rates[symbol] %}
+      {% assign rate = 1 | divided_by: stocks.rates[symbol] %}
+      {% assign asset_value = qty | times: rate %}
+      {% assign total_stock = total_stock | plus: asset_value %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% assign grand_total = total_fiat | plus: total_metal | plus: total_crypto | plus: total_stock %}
+
+<div class="layout layout--col gap--space-between">
+
+  <div class="item">
+    <div class="meta"></div>
+    <div class="content">
+      <span class="value md:value--large lg:value--xlarge value--tnums" data-value-format="true">
+        {{ total_fiat | round: 2 | number_to_currency: currency_symbol }}
+      </span>
+      <span class="label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-cash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 15h-3a1 1 0 0 1 -1 -1v-8a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v3" /><path d="M7 9m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z" /><path d="M12 14a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /></svg>Fiat</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div class="content">
+      <span class="value md:value--large lg:value--xlarge value--tnums" data-value-format="true">
+        {{ total_metal | round: 2 | number_to_currency: currency_symbol }}
+      </span>
+      <span class="label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-medal"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 4v3m-4 -3v6m8 -6v6" /><path d="M12 18.5l-3 1.5l.5 -3.5l-2 -2l3 -.5l1.5 -3l1.5 3l3 .5l-2 2l.5 3.5z" /></svg>Metals</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div class="content">
+      <span class="value md:value--large lg:value--xlarge value--tnums" data-value-format="true">
+        {{ total_crypto | round: 2 | number_to_currency: currency_symbol }}
+      </span>
+      <span class="label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-coin-bitcoin"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 8h4.09c1.055 0 1.91 .895 1.91 2s-.855 2 -1.91 2c1.055 0 1.91 .895 1.91 2s-.855 2 -1.91 2h-4.09" /><path d="M10 12h4" /><path d="M10 7v10v-9" /><path d="M13 7v1" /><path d="M13 16v1" /></svg>Crypto</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="meta"></div>
+    <div class="content">
+      <span class="value md:value--large lg:value--xlarge value--tnums" data-value-format="true">
+        {{ total_stock | round: 2 | number_to_currency: currency_symbol }}
+      </span>
+      <span class="label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chart-line"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 19l16 0" /><path d="M4 15l4 -6l4 2l4 -5l4 4" /></svg>Stocks</span>
+    </div>
+  </div>
+
+</div>
