@@ -13,7 +13,7 @@ custom_fields:
   field_type: author_bio
   name: RabbitAssets
   category: finance,analytics
-  description: Live asset price monitoring
+  description: Live asset price monitoring. For privacy, all asset calculations are performed on the TRMNL backend your device is connected to. By default this is the official TRMNL server, but you can also self-host your own. Rabbit Company does not receive or store any asset data.
   learn_more_url: https://rabbit-company.com
   github_url: https://github.com/Rabbit-Company/RabbitAssets
   email_address: info@rabbit-company.com
