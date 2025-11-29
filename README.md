@@ -219,3 +219,9 @@ Example response:
 ![RabbitAssets](/screenshots/RabbitAssets.png?raw=true "Grafana Dashboard")
 
 Pre-made Grafana dashboard can be downloaded from here: https://grafana.com/grafana/dashboards/24333
+
+## [TRMNL Recipe](https://usetrmnl.com/recipes/181797/install)
+
+![TRMNL Recipe](/screenshots/TRMNL.png?raw=true "TRMNL Recipe")
+
+Pre-made TRMNL recipe can be installed from here: https://usetrmnl.com/recipes/181797/install
